@@ -14,7 +14,7 @@ The pipeline currently supports:
 1. Downloading original Copernicus/Sentinel `.SAFE.zip` products.
 2. Writing catalogue, download, and date-statistics CSV files.
 3. Clipping a road network to the AOI.
-4. Creating a 5 m road buffer around the clipped roads.
+4. Creating a 20 m road buffer around the clipped roads.
 5. Subsetting downloaded Sentinel products with SNAP GPT.
 6. Preparing Sentinel-1 GRD processing with orbit correction, calibration, terrain correction, and VV backscatter output.
 7. Preparing Sentinel-2 index processing for NDWI and NDRE.
