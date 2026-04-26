@@ -1,0 +1,10 @@
+requests
+pandas
+geopandas
+shapely
+pyyaml
+tqdm
+python-dotenv
+rasterio
+pyproj
+fiona

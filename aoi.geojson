@@ -1,0 +1,22 @@
+{
+    "type": "FeatureCollection",
+    "name": "aoi",
+    "features": [{
+        "type": "Feature",
+        "properties": {
+            "name": "demo_aoi"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [24.208374, 43.076902],
+                    [24.208374, 43.57468],
+                    [25.232849, 43.57468],
+                    [25.232849, 43.076902],
+                    [24.208374, 43.076902]
+                ]
+            ]
+        }
+    }]
+}

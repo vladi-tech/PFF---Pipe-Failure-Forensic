@@ -1,0 +1,208 @@
+project:
+  name: copernicus_demo
+  aoi_file: aoi.geojson
+  start_date: "2025-08-24"
+  end_date: "2025-09-03"
+
+search:
+  # Use true now so Sentinel-1 does not download RAW products.
+  use_product_type_filters: true
+  print_queries: true
+
+download:
+  output_dir: data/raw
+
+  # Increase or reduce these for the demo.
+  max_total_products: 20
+  max_products_per_collection: 8
+  max_products_per_day: 2
+
+  dry_run: false
+  overwrite_existing: false
+
+outputs:
+  catalogue_csv: outputs/catalogue_results.csv
+  statistics_csv: outputs/download_statistics_by_date.csv
+  download_log_csv: outputs/download_log.csv
+  footprints_geojson: outputs/footprints.geojson
+
+road_buffer:
+  roads_file: roads.geojson
+
+  output_clipped_roads_geojson: outputs/clipped_roads.geojson
+  output_buffer_geojson: outputs/road_buffer_5m.geojson
+  output_buffer_gpkg: outputs/road_buffer_5m.gpkg
+  output_buffer_wkt: outputs/road_buffer_5m.wkt
+
+  metric_crs: EPSG:32635
+  buffer_distance_m: 5
+  simplify_tolerance_m: 0.5
+
+  cap_style: round
+  join_style: round
+
+snap_subset:
+  enabled: true
+  gpt_executable: "gpt"
+
+  graph_file: snap_subset_road_buffer.xml
+  input_catalogue_csv: outputs/catalogue_results.csv
+  input_buffer_wkt: outputs/road_buffer_5m.wkt
+
+  output_dir: data/subset_snap
+  subset_log_csv: outputs/snap_subset_log.csv
+  generated_graphs_dir: outputs/snap_temp_graphs
+
+  overwrite_existing: false
+
+snap_processing:
+  gpt_executable: "gpt"
+
+  input_catalogue_csv: outputs/catalogue_results.csv
+  input_buffer_wkt: outputs/road_buffer_5m.wkt
+
+  generated_graphs_dir: outputs/snap_processing_graphs
+  processing_log_csv: outputs/snap_processing_log.csv
+
+  overwrite_existing: false
+
+  sentinel_1:
+    enabled: true
+
+    # This graph will be created in the next file.
+    graph_template: s1_orbit_calibrate_tc_graph.xml
+
+    output_dir: data/processed_snap/SENTINEL-1
+
+    # For the automated chain, process only original GRD products.
+    accepted_product_types:
+      - IW_GRDH_1S
+
+    # SNAP output format.
+    output_format: BEAM-DIMAP
+
+    # Processing choices.
+    apply_orbit_file: true
+    thermal_noise_removal: true
+    border_noise_removal: true
+    calibration: true
+    terrain_correction: true
+    convert_to_db: true
+
+    # Output band target.
+    polarization: VV
+    output_band_name: Sigma0_VV_db
+
+    # Terrain correction settings.
+    dem_name: SRTM 1Sec HGT
+    map_projection: AUTO:42001
+    pixel_spacing_m: 10
+
+  sentinel_2:
+    enabled: true
+
+    # This graph will be created after the S1 graph.
+    graph_template: s2_indices_graph.xml
+
+    output_dir: data/processed_snap/SENTINEL-2
+
+    # L2A is preferred for indices. L1C can still be processed for demo purposes.
+    accepted_product_types:
+      - S2MSI2A
+      - S2MSI1C
+
+    output_format: BEAM-DIMAP
+
+    # Common resolution for combining 10 m and 20 m bands.
+    target_resolution_m: 10
+
+    indices:
+      ndwi:
+        enabled: true
+        output_band_name: NDWI
+        expression: "(B3 - B8) / (B3 + B8)"
+
+      ndre:
+        enabled: true
+        output_band_name: NDRE
+        expression: "(B8 - B5) / (B8 + B5)"
+
+masked_outputs:
+  enabled: true
+
+  # This will be used later for final GeoTIFF products where pixels outside
+  # the road buffer are set to NoData.
+  input_processing_log_csv: outputs/snap_processing_log.csv
+  road_buffer_geojson: outputs/road_buffer_5m.geojson
+  output_dir: data/masked_geotiff
+  output_log_csv: outputs/masked_geotiff_log.csv
+
+  overwrite_existing: false
+  nodata_value: -9999
+
+collections:
+  sentinel_1:
+    enabled: true
+    display_name: SENTINEL-1
+    copernicus_collection_name: SENTINEL-1
+
+    instrument:
+      name: C-SAR
+      enabled: true
+
+    product_levels:
+      level_0_raw:
+        enabled: false
+        display_name: Level-0 RAW
+        copernicus_product_type: IW_RAW__0S
+        pixel_size_m: null
+
+      level_1_slc:
+        enabled: false
+        display_name: Level-1 SLC
+        copernicus_product_type: IW_SLC__1S
+        pixel_size_m: variable
+
+      level_1_grd:
+        enabled: true
+        display_name: Level-1 GRD
+        copernicus_product_type: IW_GRDH_1S
+        pixel_size_m: 10
+
+      level_1_grd_cog:
+        enabled: false
+        display_name: Level-1 GRD COG
+        copernicus_product_type: IW_GRDH_1S-COG
+        pixel_size_m: 10
+
+      level_2_ocn:
+        enabled: false
+        display_name: Level-2 OCN
+        copernicus_product_type: IW_OCN__2S
+        pixel_size_m: null
+
+  sentinel_2:
+    enabled: true
+    display_name: SENTINEL-2
+    copernicus_collection_name: SENTINEL-2
+
+    instrument:
+      name: MSI
+      enabled: true
+
+    cloud_cover:
+      enabled: true
+      max_percent: 100
+
+    product_levels:
+      l1c:
+        enabled: true
+        display_name: L1C
+        copernicus_product_type: S2MSI1C
+        pixel_size_m: "10/20/60"
+
+      l2a:
+        enabled: true
+        display_name: L2A
+        copernicus_product_type: S2MSI2A
+        pixel_size_m: "10/20/60"

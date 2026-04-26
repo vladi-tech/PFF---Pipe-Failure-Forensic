@@ -1,0 +1,78 @@
+<graph id="s2-ndwi-ndre-indices">
+  <version>1.0</version>
+
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters>
+      <file>${input}</file>
+    </parameters>
+  </node>
+
+  <node id="Resample">
+    <operator>Resample</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters>
+      <referenceBand>B2</referenceBand>
+      <targetWidth/>
+      <targetHeight/>
+      <targetResolution>${targetResolution}</targetResolution>
+      <upsampling>Nearest</upsampling>
+      <downsampling>First</downsampling>
+      <flagDownsampling>First</flagDownsampling>
+      <resampleOnPyramidLevels>true</resampleOnPyramidLevels>
+    </parameters>
+  </node>
+
+  <node id="BandMaths">
+    <operator>BandMaths</operator>
+    <sources>
+      <sourceProduct refid="Resample"/>
+    </sources>
+    <parameters>
+      <targetBands>
+        <targetBand>
+          <name>${ndwiBandName}</name>
+          <type>float32</type>
+          <expression>${ndwiExpression}</expression>
+          <description>Normalized Difference Water Index</description>
+          <unit>1</unit>
+          <noDataValue>-9999.0</noDataValue>
+        </targetBand>
+        <targetBand>
+          <name>${ndreBandName}</name>
+          <type>float32</type>
+          <expression>${ndreExpression}</expression>
+          <description>Normalized Difference Red Edge Index</description>
+          <unit>1</unit>
+          <noDataValue>-9999.0</noDataValue>
+        </targetBand>
+      </targetBands>
+      <variables/>
+    </parameters>
+  </node>
+
+  <node id="Subset">
+    <operator>Subset</operator>
+    <sources>
+      <sourceProduct refid="BandMaths"/>
+    </sources>
+    <parameters>
+      <geoRegion>${wkt}</geoRegion>
+      <copyMetadata>true</copyMetadata>
+    </parameters>
+  </node>
+
+  <node id="Write">
+    <operator>Write</operator>
+    <sources>
+      <sourceProduct refid="Subset"/>
+    </sources>
+    <parameters>
+      <file>${output}</file>
+      <formatName>${formatName}</formatName>
+    </parameters>
+  </node>
+</graph>
