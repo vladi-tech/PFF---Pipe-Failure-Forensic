@@ -35,7 +35,7 @@ road_buffer:
   output_buffer_wkt: outputs/road_buffer_5m.wkt
 
   metric_crs: EPSG:32635
-  buffer_distance_m: 5
+  buffer_distance_m: 20
   simplify_tolerance_m: 0.5
 
   cap_style: round
